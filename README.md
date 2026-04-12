@@ -1,0 +1,81 @@
+# Voice AI Agent
+
+A voice-controlled local AI agent that accepts audio input, classifies user intent, executes tools, and displays results in a clean UI.
+
+## Architecture
+
+Audio Input (mic / upload)
+       |
+   STT - Groq Whisper API
+       |
+3-Tier Intent Classifier
+  Tier 1: Regex  - instant, 0 API cost
+  Tier 2: Keywords - fast scoring
+  Tier 3: LLM fallback - Groq Llama 3.3
+       |
+Tool Executor
+  file_ops.py   - create file/folder in output/
+  code_gen.py   - generate + save code
+  summarizer.py - summarize text
+  chat.py       - general conversation
+       |
+Session Memory - injects last 3 turns into LLM context
+       |
+Gradio UI (4 panels + session history)
+
+## Why Groq API instead of local models
+
+Running whisper-large-v3 locally requires 8GB+ VRAM. My machine (MacBook Air 2017) cannot run it at acceptable latency. Groq provides the same Whisper model via API with sub-2s response time. Similarly, running Llama 3.3 70B locally is not feasible on this hardware.
+
+Switching to local models would require changing only stt.py and llm.py - the rest of the pipeline stays the same.
+
+## Setup
+
+1. Clone the repo
+2. Create virtual environment: python -m venv venv
+3. Activate: source venv/bin/activate
+4. Install dependencies: pip install -r requirements.txt
+5. Copy .env.example to .env and add your GROQ_API_KEY
+6. Run: python app.py
+7. Open http://localhost:7860
+
+## Running Tests
+
+python tests/test_intent.py
+
+
+## Supported Intents
+
+| Intent       | Example                                | Classifier Tier |
+|--------------|----------------------------------------|-----------------|
+| create_file  | "create a file called notes.txt"       | Regex           |
+| write_code   | "write a python function for fibonacci"| Keyword         |
+| summarize    | "summarize this paragraph"             | Regex           |
+| general_chat | "what is machine learning"             | LLM fallback    |
+
+## Safety
+
+All file operations are restricted to the output/ directory. Path traversal attempts like ../../etc/passwd are blocked using os.path.basename.
+
+## Challenges Faced
+
+- Groq model deprecation: llama3-70b-8192 was decommissioned mid-development, switched to llama-3.3-70b-versatile
+- Intent classifier false positives: overlapping keywords (csv matched both create_file and write_code), fixed by refining keyword lists
+- STT accuracy with accents: Whisper occasionally misinterprets words, e.g. "machine" transcribed as "muscle"
+- ffmpeg build time on older macOS: no pre-built bottles available for macOS 12, had to compile from source
+
+## Project Structure
+
+app.py              - gradio ui entry point
+agent.py            - pipeline orchestrator
+stt.py              - groq whisper stt
+intent.py           - 3-tier intent classifier
+llm.py              - groq llama wrapper
+memory.py           - session history
+tools/file_ops.py   - file creation
+tools/code_gen.py   - code generation
+tools/summarizer.py - text summarization
+tools/chat.py       - general chat
+utils/audio.py      - audio format conversion
+output/             - sandboxed output folder
+tests/test_intent.py - intent tests
