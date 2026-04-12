@@ -1,40 +1,36 @@
 import gradio as gr
 from dotenv import load_dotenv
-from stt import transcribe
-from intent import classify
-from utils.audio import convert_to_wav
+from agent import run
 
 load_dotenv()
 
 def process_audio(audio_path):
     if audio_path is None:
-        return "no audio provided.", "—"
-    try:
-        wav = convert_to_wav(audio_path)
-        text = transcribe(wav)
-        if not text:
-            return "could not transcribe.", "—"
-        intents = classify(text)
-        intent_str = " + ".join(f"{i['intent']} ({i['confidence']})" for i in intents)
-        return text, intent_str
-    except Exception as e:
-        return f"error: {e}", "—"
+        return "no audio provided.", "—", "—", "please record or upload audio."
+    r = run(audio_path)
+    return (
+        r.get("transcription") or "—",
+        f"{r.get('intent') or '—'} [{r.get('confidence', '')}]",
+        r.get("action") or "—",
+        r.get("output") or "—",
+    )
 
 with gr.Blocks(title="Voice Agent") as demo:
-    gr.Markdown("# Voice Agent — Phase 2")
-    audio_input = gr.Audio(
-        sources=["microphone", "upload"],
-        type="filepath",
-        label="Audio Input"
-    )
-    run_btn = gr.Button("Transcribe", variant="primary")
-    transcription_box = gr.Textbox(label="Transcribed Text", interactive=False, lines=3)
-    intent_box = gr.Textbox(label="Detected Intent", interactive=False)
+    gr.Markdown("# Voice AI Agent")
+    with gr.Row():
+        audio_input = gr.Audio(sources=["microphone", "upload"], type="filepath", label="Audio Input")
+        run_btn = gr.Button("Run Agent", variant="primary", size="lg")
+    with gr.Row():
+        transcription_box = gr.Textbox(label="Transcribed Text", interactive=False)
+        intent_box = gr.Textbox(label="Detected Intent", interactive=False)
+    with gr.Row():
+        action_box = gr.Textbox(label="Action Taken", interactive=False)
+        output_box = gr.Textbox(label="Final Output", interactive=False, lines=10)
 
     run_btn.click(
         fn=process_audio,
         inputs=[audio_input],
-        outputs=[transcription_box, intent_box],
+        outputs=[transcription_box, intent_box, action_box, output_box],
     )
 
 if __name__ == "__main__":
