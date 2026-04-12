@@ -6,6 +6,9 @@ from intent import classify
 from tools import TOOL_MAP
 from tools.chat import general_chat
 from utils.audio import convert_to_wav
+from memory import SessionMemory
+
+_memory = SessionMemory()
 
 def run(audio_path):
     result = {"transcription": "", "intent": "", "confidence": "", "action": "", "output": ""}
@@ -40,11 +43,22 @@ def run(audio_path):
     # step 4: execute tool
     try:
         tool_fn = TOOL_MAP.get(result["intent"], general_chat)
-        tool_result = tool_fn(text)
+        # inject memory context for chat
+        if result["intent"] == "general_chat":
+            context = _memory.get_context()
+            tool_result = general_chat(text, context=context)
+        else:
+            tool_result = tool_fn(text)
         result["action"] = f"executed: {result['intent']}"
         result["output"] = tool_result.get("output", "done")
     except Exception as e:
         result["action"] = "failed"
         result["output"] = f"tool error: {e}"
 
+    # step 5: save to memory
+    _memory.add(text, result["intent"], {"output": result["output"]})
+
     return result
+
+def get_history():
+    return _memory.get_all()
