@@ -79,6 +79,14 @@ All file operations are restricted to the `output/` directory. Path traversal at
 - **STT accuracy with accents**: Whisper occasionally misinterprets words, e.g. "machine" transcribed as "muscle"
 - **ffmpeg build time on older macOS**: no pre-built bottles available for macOS 12, had to compile from source
 
+
+## Bonus Features
+
+- **Compound Commands**: supports multiple intents in one command, e.g. "create a file and write a python function for hello world" detects both create_file + write_code and executes sequentially
+- **Human-in-the-Loop**: file operations (create_file, write_code) show Confirm/Cancel buttons before execution
+- **Session Memory**: maintains last 10 turns of conversation history, injects context into LLM for better responses
+- **Graceful Degradation**: errors at any stage (audio, STT, intent, tools) are caught and shown in UI without crashing
+
 ## Project Structure
 
     app.py              - gradio ui entry point
