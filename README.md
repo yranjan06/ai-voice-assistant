@@ -1,6 +1,6 @@
 # Voice AI Agent
 
-A voice-controlled local AI agent that accepts audio input, classifies user intent, executes tools, and displays results in a clean UI.
+A voice controlled local AI agent that accepts audio input, classifies user intent, executes tools, and displays results in a clean UI.
 
 ## Architecture
 
