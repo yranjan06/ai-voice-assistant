@@ -15,7 +15,7 @@ def process_audio(audio_path):
     history = [[h["user"][:60], h["intent"]] for h in get_history()]
 
     # check if file operation - show confirm button
-    needs_confirm = r.get("intent") in ["create_file", "write_code"]
+    needs_confirm = any(i in (r.get("intent") or "") for i in ["create_file", "write_code"])
 
     if needs_confirm:
         pending_result = r
