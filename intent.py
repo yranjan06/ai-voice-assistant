@@ -4,7 +4,7 @@ from llm import call_llm
 
 REGEX_PATTERNS = {
     "create_file": re.compile(r"(create|make|new)\s+(a\s+)?(file|folder|directory)", re.IGNORECASE),
-    "write_code": re.compile(r"(write|generate|create|build)\s+(a\s+)?(code|script|function|class|program)", re.IGNORECASE),
+    "write_code": re.compile(r"(write|generate|create|build)\s+(a\s+)?(\w+\s+)?(code|script|function|class|program)", re.IGNORECASE),
     "summarize": re.compile(r"(summarize|summary|tldr|shorten|brief|key points)", re.IGNORECASE),
 }
 
@@ -18,10 +18,16 @@ def classify(text):
     # 3 tier intent classifier: regex -> keyword -> llm fallback
     text_lower = text.lower().strip()
 
-    # tier 1: regex fast path
+    # check for compound commands first
+    matched = []
     for intent, pattern in REGEX_PATTERNS.items():
         if pattern.search(text_lower):
-            return [{"intent": intent, "confidence": "regex", "text": text}]
+            matched.append({"intent": intent, "confidence": "regex", "text": text})
+
+    if len(matched) > 1:
+        return matched
+    if len(matched) == 1:
+        return matched
 
     # tier 2: keyword scoring
     scores = {k: 0 for k in KEYWORD_MAP}
@@ -39,7 +45,7 @@ def classify(text):
 
 def _llm_classify(text):
     # ask llm when regex and keywords cant figure it out
-    prompt = f"""Classify this user command into one intent:
+    prompt = f"""Classify this user command into one or more intents:
 - create_file
 - write_code
 - summarize
@@ -47,7 +53,8 @@ def _llm_classify(text):
 
 Command: "{text}"
 
-Respond ONLY with valid JSON array. Example: [{{"intent": "write_code", "confidence": "llm"}}]"""
+Respond ONLY with valid JSON array. Example: [{{"intent": "write_code", "confidence": "llm"}}]
+For compound commands return multiple: [{{"intent": "summarize", "confidence": "llm"}}, {{"intent": "create_file", "confidence": "llm"}}]"""
 
     try:
         response = call_llm(prompt, system="You are an intent classifier. Only respond with valid JSON.")
