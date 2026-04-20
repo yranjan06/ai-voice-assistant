@@ -18,6 +18,7 @@ A voice controlled local AI agent that accepts audio input, classifies user inte
       code_gen.py   - generate + save code
       summarizer.py - summarize text
       chat.py       - general conversation
+      web_search.py - search web using DuckDuckGo
            |
     Session Memory - injects last 3 turns into LLM context
            |
@@ -66,6 +67,7 @@ Switching to local models would require changing only `stt.py` and `llm.py` - th
 | create_file  | "create a file called notes.txt"        | Regex           |
 | write_code   | "write a python function for fibonacci" | Keyword         |
 | summarize    | "summarize this paragraph"              | Regex           |
+| web_search   | "search for machine learning trends"    | Regex           |
 | general_chat | "what is machine learning"              | LLM fallback    |
 
 ## Safety
@@ -99,6 +101,7 @@ All file operations are restricted to the `output/` directory. Path traversal at
     tools/code_gen.py   - code generation
     tools/summarizer.py - text summarization
     tools/chat.py       - general chat
+    tools/web_search.py - web search
     utils/audio.py      - audio format conversion
     output/             - sandboxed output folder
     tests/test_intent.py - intent tests
