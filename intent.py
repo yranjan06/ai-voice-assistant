@@ -6,12 +6,14 @@ REGEX_PATTERNS = {
     "create_file": re.compile(r"(create|make|new)\s+(a\s+)?(file|folder|directory)", re.IGNORECASE),
     "write_code": re.compile(r"(write|generate|create|build)\s+(a\s+)?(\w+\s+)?(code|script|function|class|program)", re.IGNORECASE),
     "summarize": re.compile(r"(summarize|summary|tldr|shorten|brief|key points)", re.IGNORECASE),
+    "web_search": re.compile(r"(search|find|look up|google)\s+(for\s+|about\s+|information\s+)?", re.IGNORECASE),
 }
 
 KEYWORD_MAP = {
     "create_file": ["file", "folder", "directory", "txt", "json"],
     "write_code": ["code", "python", "function", "class", "script", "algorithm", "program", "implement"],
     "summarize": ["summarize", "summary", "brief", "shorter", "points"],
+    "web_search": ["search", "find", "google", "look up", "information"],
 }
 
 def classify(text):
